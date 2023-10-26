@@ -30,6 +30,8 @@ int main()
     graph3.addNode('h', { {2 ,2} });
     graph3.addNode('t', { {0,3},{3,2} });
     graph3.addNode('u', { {3,2} });
-    result = graph3.depthFirstSearch('0', false);
+    //result = graph3.depthFirstSearch('h');
+    result = graph3.breadthFirstSearch('0');
+    std::cout << "Hello World!\n" << std::boolalpha << result << "\n";
 }
 

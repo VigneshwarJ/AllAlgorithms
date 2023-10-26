@@ -1,7 +1,8 @@
 #pragma once
 #include <vector>
-#include <optional>
+#include <queue>
 #include <stack>
+#include <iostream>
 // templates should be in a single file.
 
 struct Edge {
@@ -37,9 +38,9 @@ protected:
 	std::vector<Node<T,E>> mNodes;
 	int depthFirstSearchRecursive(int root, T val, bool* visited);
 	int depthFirstSearchIter(int root, T val, bool* visited);
-	int breadthFirstSearchIter(int root, T val, bool* visited);
 public:
 	static int Count;
+	bool breadthFirstSearch( T val, int root = 0);
 	bool depthFirstSearch(T val, bool recursive = true);
 	Graph() {}
 	void addNode(T value, std::vector<E> neighbors);
@@ -110,25 +111,27 @@ int Graph<T,E>::depthFirstSearchIter(int root, T val, bool* visited)
 }
 
 template <typename T, typename E>
-int Graph<T,E>::breadthFirstSearchIter(int root, T val, bool* visited)
+bool Graph<T,E>::breadthFirstSearch(T val, int root )
 {
-	//std::heap<int> depthStack;
-	//depthStack.push(root);
-	//while (!depthStack.empty())
-	//{
-	//	auto top = depthStack.top();
-	//	depthStack.pop();
-	//	if (Nodes[top].equals(val))
-	//	{
-	//		return top;
-	//	}
-	//	visited[top] = true;
-	//	for (auto& value : Nodes[top].mNeighbors)
-	//	{
-	//		depthStack.push(value);
-	//	}
-	//}
-	return -1;
+	bool* visited = new bool[mNodes.size()] {false};
+	std::queue<int> breadthQueue;
+	breadthQueue.push(root);
+	while (!breadthQueue.empty())
+	{
+		auto front = breadthQueue.front();
+		breadthQueue.pop();
+		if (mNodes[front].equals(val))
+		{
+			return true;
+		}
+		visited[front] = true;
+		std::cout << front << std::endl;
+		for (auto& value : mNodes[front].mNeighbors)
+		{
+			breadthQueue.push(value.toEdge);
+		}
+	}
+	return false;
 }
 
 template <typename T, typename E>
