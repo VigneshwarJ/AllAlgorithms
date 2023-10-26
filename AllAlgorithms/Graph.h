@@ -96,17 +96,20 @@ int Graph<T,E>::depthFirstSearchIter(int root, T val, bool* visited)
 	{
 		auto top = depthStack.top();
 		depthStack.pop();
+		visited[top] = true; 
+		std::cout << top << " --> ";
 		if (mNodes[top].equals(val))
 		{
+			std::cout << std::endl;
 			return top;
 		}
-		visited[top] = true;
 		for (auto& value : mNodes[top].mNeighbors)
 		{
 			if(!visited[value.toEdge])
 				depthStack.push(value.toEdge);
 		}
 	}
+	std::cout << std::endl;
 	return -1;
 }
 
@@ -120,17 +123,23 @@ bool Graph<T,E>::breadthFirstSearch(T val, int root )
 	{
 		auto front = breadthQueue.front();
 		breadthQueue.pop();
+		visited[front] = true;
+		std::cout << front << " --> ";
 		if (mNodes[front].equals(val))
 		{
+			std::cout << std::endl;
 			return true;
 		}
-		visited[front] = true;
-		std::cout << front << std::endl;
 		for (auto& value : mNodes[front].mNeighbors)
 		{
+			if (visited[value.toEdge])
+			{
+				continue;
+			}
 			breadthQueue.push(value.toEdge);
 		}
 	}
+	std::cout << std::endl;
 	return false;
 }
 

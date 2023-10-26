@@ -22,7 +22,7 @@ int main()
     graph2.addNode("hello", { 2 });
     graph2.addNode("test", { 0,3 });
     graph2.addNode("u", { 3 });
-    result = graph2.depthFirstSearch("00",false);
+    result = graph2.depthFirstSearch("u",false);
     std::cout << "Hello World!\n" << std::boolalpha << result << "\n";
 
     Graph<char, WeightedEdge<char>> graph3;
@@ -31,7 +31,7 @@ int main()
     graph3.addNode('t', { {0,3},{3,2} });
     graph3.addNode('u', { {3,2} });
     //result = graph3.depthFirstSearch('h');
-    result = graph3.breadthFirstSearch('0');
+    result = graph3.breadthFirstSearch('u');
     std::cout << "Hello World!\n" << std::boolalpha << result << "\n";
 }
 
