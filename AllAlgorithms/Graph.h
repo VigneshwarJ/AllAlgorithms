@@ -3,106 +3,65 @@
 #include <optional>
 #include <stack>
 // templates should be in a single file.
-template <typename T> struct UnWeightedNode {
+
+struct Edge {
+	int toEdge;
+	Edge(int to):toEdge(to)
+	{}
+};
+template<typename unit = int> struct WeightedEdge {
+	int toEdge;
+	unit weight;
+};
+template <typename T, typename E = Edge> struct Node {
+	
 	int mId;
 	T mValue;
-	std::vector<int> mNeighbors;
-	UnWeightedNode():mId(-1)
+	std::vector<E> mNeighbors;
+	Node():mId(-1)
 	{
 
 	}
-	UnWeightedNode(int id, T value, std::vector<int>& neighbors): mId(id),
+	Node(int id, T value, std::vector<E>& neighbors): mId(id),
 		mValue(value), mNeighbors(std::move(neighbors)){}
 
 	bool equals(T value) {
-		return std::equal_to<>{}(mValue, value);
+		return std::equal_to<>{}(mValue, value); // using std::equal_to for comparision ( need to add compare template..
 	}
 };
 
-template <typename T> struct WeightedNode {
-	int mId;
-	T mValue;
-	std::vector<std::pair<int,int>> mNeighbors;
-	WeightedNode() :mId(-1)
-	{
 
-	}
-	WeightedNode(int id, T value, std::vector<std::pair<int, int>>& neighbors) : mId(id),
-		mValue(value), mNeighbors(std::move(neighbors)) {}
-
-	bool equals(T value) {
-		return std::equal_to<>{}(mValue, value);
-	}
-};
-
-// C++ templates class methods alone cannot be partially specialized
-// remedy is to create a partially specialized class : Using inheritence to avoid redefinition.
-
-template <typename T, typename Node> class GraphBase {
+template <typename T, typename E = Edge> class Graph {
 	
 protected:
-	std::vector<Node> mNodes;
+	std::vector<Node<T,E>> mNodes;
 	int depthFirstSearchRecursive(int root, T val, bool* visited);
 	int depthFirstSearchIter(int root, T val, bool* visited);
 	int breadthFirstSearchIter(int root, T val, bool* visited);
 public:
 	static int Count;
 	bool depthFirstSearch(T val, bool recursive = true);
-};
-
-template <typename T,typename Node = UnWeightedNode<T>> class Graph : public GraphBase<T,Node>
-{
-	//c++ does not superclass templates for name resolution. //method 1
-	using GraphBase<T, Node>::mNodes; //using Superclass<T>::g;
-	using GraphBase<T, Node>::Count;//using Superclass<T>::b;
-	
-public:
-	Graph();
-	void addNode(T value, std::vector<int> neighbors);
-	
-};
-
-
-template <typename T> class Graph<T, WeightedNode<T>> : public GraphBase<T, WeightedNode<T>>
-{
-	//c++ does not superclass templates for name resolution. // method 2 using this..
-public:
-	Graph()
-	{
-
-	}
-	void addNode(T value, std::vector < std::pair<int, int>> neighbors)
-	{
-		this->mNodes.push_back(WeightedNode<T>(this->Count++, value, neighbors));
-	}
-
+	Graph() {}
+	void addNode(T value, std::vector<E> neighbors);
 };
 
 
 
 
-template <typename T, typename Node>
-int GraphBase<T,Node>::Count= 0;
+template <typename T, typename E>
+int Graph<T,E>::Count= 0;
 
 
-
-
-template <typename T, typename Node>
-Graph<T,Node>::Graph()
+template <typename T, typename E>
+void Graph<T,E>::addNode(T value, std::vector<E> neighbors)
 {
-
-}
-
-template <typename T, typename Node>
-void Graph<T,Node>::addNode(T value, std::vector<int> neighbors)
-{
-	mNodes.push_back(Node(Count++, value, neighbors));
+	mNodes.push_back(Node<T,E>(Count++, value, neighbors));
 }
 
 
 
-template <typename T, typename Node>
-int GraphBase<T,Node>::depthFirstSearchRecursive(int root, T val, bool* visited)
+template <typename T, typename E>
+int Graph<T,E>::depthFirstSearchRecursive(int root, T val, bool* visited)
 {
 	if (visited[root])
 	{
@@ -117,8 +76,8 @@ int GraphBase<T,Node>::depthFirstSearchRecursive(int root, T val, bool* visited)
 	{
 		for (auto& value : mNodes[root].mNeighbors)
 		{
-			auto result = depthFirstSearchRecursive(value, val, visited);
-			if (result)
+			auto result = depthFirstSearchRecursive(value.toEdge, val, visited);
+			if (result != -1)
 			{
 				return result;
 			}
@@ -127,8 +86,8 @@ int GraphBase<T,Node>::depthFirstSearchRecursive(int root, T val, bool* visited)
 	}
 }
 
-template <typename T, typename Node>
-int GraphBase<T,Node>::depthFirstSearchIter(int root, T val, bool* visited)
+template <typename T, typename E>
+int Graph<T,E>::depthFirstSearchIter(int root, T val, bool* visited)
 {
 	std::stack<int> depthStack;
 	depthStack.push(root);
@@ -143,15 +102,15 @@ int GraphBase<T,Node>::depthFirstSearchIter(int root, T val, bool* visited)
 		visited[top] = true;
 		for (auto& value : mNodes[top].mNeighbors)
 		{
-			if(!visited[value])
-				depthStack.push(value);
+			if(!visited[value.toEdge])
+				depthStack.push(value.toEdge);
 		}
 	}
 	return -1;
 }
 
-template <typename T, typename Node>
-int GraphBase<T,Node>::breadthFirstSearchIter(int root, T val, bool* visited)
+template <typename T, typename E>
+int Graph<T,E>::breadthFirstSearchIter(int root, T val, bool* visited)
 {
 	//std::heap<int> depthStack;
 	//depthStack.push(root);
@@ -172,8 +131,8 @@ int GraphBase<T,Node>::breadthFirstSearchIter(int root, T val, bool* visited)
 	return -1;
 }
 
-template <typename T, typename Node>
-bool GraphBase<T,Node>::depthFirstSearch(T val, bool recursive)
+template <typename T, typename E>
+bool Graph<T,E>::depthFirstSearch(T val, bool recursive)
 {
 	bool* visited = new bool[mNodes.size()] {false};
 	int returned = -1;
@@ -188,3 +147,21 @@ bool GraphBase<T,Node>::depthFirstSearch(T val, bool recursive)
 		return false;
 	return true;
 }
+
+
+/*
+  Can a class method be partially specialized ? No ..
+  C++ templates class methods alone cannot be partially specialized.
+  Remedy is to create a partially specialized class : Using inheritence to avoid redefinition.
+*/
+
+/*
+Can template be constrained ? No ...
+https://stackoverflow.com/questions/874298/how-do-you-constrain-a-template-to-only-accept-certain-types
+*/ 
+
+/*
+	//c++ does not superclass templates for name resolution
+		- using Superclass<T>::g;
+		- this-> ( to specify)
+*/
