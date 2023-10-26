@@ -2,7 +2,7 @@
 #include <vector>
 #include <optional>
 #include <stack>
-
+// templates should be in a single file.
 template <typename T> struct UnWeightedNode {
 	int mId;
 	T mValue;
