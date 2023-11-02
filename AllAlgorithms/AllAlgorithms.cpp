@@ -7,6 +7,8 @@
 #include <set>
 #include "ParallelExamples.h"
 #include<chrono>
+#include <cublas.h>
+
 template <typename Func, typename ...Args>
 auto printTime(Func func, Args&&... args)
 {
@@ -28,6 +30,8 @@ auto printTime(Func func, Args&&... args)
 }
 void printMat(float* mat,int m,int n)
 {
+    if (m > 25)
+        return;
     for (size_t i = 0; i < m; i++)
     {
         for (size_t j = 0; j < m; j++)
@@ -35,6 +39,31 @@ void printMat(float* mat,int m,int n)
             std::cout << mat[i * m + j] <<" ";
         }
         std::cout << "\n";
+    }
+}
+
+void checkMatEqual(float* mat, float* mat2, int m, int n)
+{
+    for (size_t i = 0; i < m; i++)
+    {
+        for (size_t j = 0; j < m; j++)
+        {
+            if (mat[i * m + j]!= mat2[i * m + j])
+            {
+                std::cout << i <<" "<<j<<  " "<< mat[i * m + j] << " " << mat2[i * m + j] << " fail\n";
+                return;
+            } 
+        }
+        
+    }
+}
+
+void fillRand(float* mat, int m, int n)
+{
+    for (int i = 0; i < m; i++) {
+        for (int j = 0; j < n; j++) {
+            mat[i*m+j] = rand() % 3 ;
+        }
     }
 }
 
@@ -62,34 +91,26 @@ void test(int N)
     auto delta_time = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();*/
     //std::cout << printTime(addVectorSISD, A.data(), B.data(), C.data(), N) << std::endl;
     //std::cout << printTime(addVectorSIMT,A.data(), B.data(), C.data(), N) << std::endl;
+#define N 1024
+    float* AMat = new float[N*N];
+    float* BMat = new float[N * N];
+    fillRand((float*)AMat, N, N);
+    fillRand((float*)BMat, N, N);
+    float* CMat = new float[N * N];
+    float* DMat = new float[N * N];
 
-    float AMat[4][4] = {
-        {1,0,0,0 },
-        {0,1,0,0 },
-        {0,0,1,0 },
-        {0,0,0,1 }
-    };
-
-    float BMat[4][4] = {
-        {1,0,0,0 },
-        {0,1,0,0 },
-        {0,0,1,0 },
-        {0,0,0,1 }
-    };
-    float CMat[4][4] = {
-        {0,0,0,0 },
-        {0,0,0,0 },
-        {0,0,1,0 },
-        {0,0,0,1 }
-    };
-    void* ptr = CMat;
-    std::cout << ((float*)(ptr))[10];
-    std::cout << printTime(matrixMultiplySISD, (float*)AMat, (float*)BMat, (float*)CMat, 4, 4, 4)
+    
+    std::cout << printTime(matrixMultiplySISD, (float*)AMat, (float*)BMat, 
+        (float*)CMat, N, N, N)
         << std::endl;
-    std::cout << printTime(matrixMultiplySIMTNaive, (float*)AMat, (float*)BMat, 
-        (float*)CMat, 4,4,4) << std::endl;
 
-    printMat((float*)AMat,4,4);
+    printMat((float*)CMat, N, N);
+    std::cout << printTime(matrixMultiplySIMTNaive, (float*)AMat, (float*)BMat, 
+        (float*)DMat, N,N,N) << std::endl;
+    checkMatEqual((float*)CMat, (float*)DMat, N, N);
+    printMat((float*)DMat,N,N);
+
+     
 
 }
 

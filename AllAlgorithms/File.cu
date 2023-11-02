@@ -19,12 +19,17 @@ void multiplyMatrix(float* A, float* B, float* C, int m, int n, int o)
 {
 	size_t i = threadIdx.x + blockDim.x * blockIdx.x;
 	size_t j = threadIdx.y + blockDim.y * blockIdx.y;
-	/*size_t k = threadIdx.y + blockDim.y * blockIdx.y;*/
-	for (size_t k = 0; k < n; k++)
+	if (i<m && j < o)
 	{
-		C[i * m + j] += A[i * m + k] *B[k*n+j];
-	}
+		float val = 0;
+		for (size_t k = 0; k < n; k++)
+		{
+			val += A[i * m + k] *B[k*n+j];
+		}
+		C[i * m + j] = val;
 
+	}
+	/*size_t k = threadIdx.y + blockDim.y * blockIdx.y;*/
 }
 
 
@@ -56,15 +61,21 @@ void addVectorSIMT(float* A, float* B, float* C, size_t size)
 void matrixMultiplySIMTNaive(float* A, float* B, float* C, int m, int n, int o)
 {
 	float* d_A = nullptr, * d_B = nullptr, * d_C = nullptr;
-	cudaMalloc((void**)&d_A, m*n);
-	cudaMalloc((void**)&d_B, n*o);
-	cudaMalloc((void**)&d_C, n*n);
-	dim3 grid = { 2,2,1 };
-	dim3 block = {8,8,1 };
-	cudaMemcpy(d_A, A, m * n, cudaMemcpyHostToDevice);
-	cudaMemcpy(d_B, B, n * o, cudaMemcpyHostToDevice);
-	multiplyMatrix << <grid, block >> > (d_A, d_B, d_C, m, n, o);
-	cudaMemcpy(C, d_C, m*o, cudaMemcpyDeviceToHost);
+	cudaMalloc((void**)&d_A, m*n * sizeof(float));
+	cudaMalloc((void**)&d_B, n*o * sizeof(float));
+	cudaMalloc((void**)&d_C, m*o * sizeof(float));
+	dim3 threadsPerBlock(m, o);
+	dim3 blocksPerGrid(1, 1);
+	if (m*o > 512) {
+		threadsPerBlock.x = 16;
+		threadsPerBlock.y = 16;
+		blocksPerGrid.x = ceil(double(m) / double(threadsPerBlock.x));
+		blocksPerGrid.y = ceil(double(o) / double(threadsPerBlock.y));
+	}
+	cudaMemcpy(d_A, A, m * n * sizeof(float), cudaMemcpyHostToDevice);
+	cudaMemcpy(d_B, B, n * o * sizeof(float), cudaMemcpyHostToDevice);
+	multiplyMatrix << <blocksPerGrid, threadsPerBlock >> > (d_A, d_B, d_C, m, n, o);
+	cudaMemcpy(C, d_C, m*o * sizeof(float), cudaMemcpyDeviceToHost);
 
 	cudaFree(d_A);
 	cudaFree(d_B);

@@ -3,7 +3,6 @@
 #include <chrono>
 #include <iostream>
 
-
 void addVectorSISD(float* A, float* B, float* C, size_t size)
 {
 
@@ -13,7 +12,8 @@ void addVectorSISD(float* A, float* B, float* C, size_t size)
 	}
 }
 
-void matrixMultiplySISD(float* A, float* B, float* C, int m, int n, int o)
+void matrixMultiplySISD(float* A, float* B, 
+	float* C, int m, int n, int o)
 {
 	for (size_t i = 0; i < m; i++)
 	{
